@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatApp</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Tela de login -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-icon">💬</div>
+      <h1>ChatApp</h1>
+      <p>Conecte-se com o mundo</p>
+    </div>
+    <form id="login-form">
+      <div class="input-group">
+        <label>Seu nome</label>
+        <input type="text" id="user-name" placeholder="Digite seu nome..." maxlength="30" autocomplete="off" required>
+      </div>
+      <button type="submit" class="btn-login">Entrar <span>→</span></button>
+    </form>
+  </div>
+</div>
+
+<!-- App principal -->
+<div id="app" class="app hidden">
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="my-avatar" id="my-avatar"></div>
+      <div class="sidebar-title">ChatApp</div>
+      <div class="sidebar-actions">
+        <button class="icon-btn" id="btn-new-group" title="Novo grupo">👥</button>
+        <button class="icon-btn" id="btn-menu" title="Menu">⋮</button>
+      </div>
+    </div>
+
+    <!-- Status selector -->
+    <div class="status-bar">
+      <span>Status:</span>
+      <select id="status-select">
+        <option value="online">🟢 Online</option>
+        <option value="away">🟡 Ausente</option>
+        <option value="busy">🔴 Ocupado</option>
+      </select>
+    </div>
+
+    <!-- Busca -->
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="🔍 Buscar ou começar conversa">
+    </div>
+
+    <!-- Tabs -->
+    <div class="sidebar-tabs">
+      <button class="tab active" data-tab="chats">Conversas</button>
+      <button class="tab" data-tab="users">Contatos</button>
+    </div>
+
+    <!-- Lista de conversas -->
+    <div class="tab-content active" id="tab-chats">
+      <div class="rooms-list" id="rooms-list"></div>
+    </div>
+
+    <!-- Lista de usuários -->
+    <div class="tab-content" id="tab-users">
+      <div class="users-list" id="users-list"></div>
+    </div>
+  </div>
+
+  <!-- Painel principal -->
+  <div class="main-panel" id="main-panel">
+    <!-- Tela vazia -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">💬</div>
+      <h2>ChatApp Web</h2>
+      <p>Selecione uma conversa para começar a trocar mensagens</p>
+    </div>
+
+    <!-- Chat ativo -->
+    <div class="chat-panel hidden" id="chat-panel">
+      <div class="chat-header" id="chat-header">
+        <button class="icon-btn back-btn hidden" id="back-btn">←</button>
+        <div class="chat-avatar" id="chat-avatar"></div>
+        <div class="chat-info">
+          <div class="chat-name" id="chat-name"></div>
+          <div class="chat-subtitle" id="chat-subtitle"></div>
+        </div>
+        <div class="chat-actions">
+          <button class="icon-btn" id="btn-info" title="Informações">ℹ️</button>
+        </div>
+      </div>
+
+      <div class="messages-area" id="messages-area">
+        <div class="messages-list" id="messages-list"></div>
+      </div>
+
+      <!-- Typing indicator -->
+      <div class="typing-indicator hidden" id="typing-indicator">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span id="typing-text"></span>
+      </div>
+
+      <!-- Reply preview -->
+      <div class="reply-preview hidden" id="reply-preview">
+        <div class="reply-content">
+          <strong id="reply-sender"></strong>
+          <span id="reply-text"></span>
+        </div>
+        <button id="cancel-reply">✕</button>
+      </div>
+
+      <div class="message-input-area">
+        <div class="emoji-btn" id="emoji-btn" title="Emoji">😊</div>
+        <div class="emoji-picker hidden" id="emoji-picker"></div>
+        <div class="message-input" id="message-input" contenteditable="true" data-placeholder="Digite uma mensagem..."></div>
+        <button class="send-btn" id="send-btn" title="Enviar">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal criar grupo -->
+<div class="modal hidden" id="modal-group">
+  <div class="modal-overlay" id="modal-overlay"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Novo Grupo</h3>
+      <button class="icon-btn" id="close-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" id="group-name" placeholder="Nome do grupo" maxlength="50">
+      <p class="modal-label">Selecionar participantes:</p>
+      <div class="modal-users" id="modal-users"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancel-group">Cancelar</button>
+      <button class="btn-primary" id="create-group">Criar Grupo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notificações -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
