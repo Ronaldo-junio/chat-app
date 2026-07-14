@@ -119,7 +119,7 @@ app.post('/api/auth/register', route((req, res) => {
 
   db.prepare(`INSERT INTO users (id, username, password_hash, display_name, avatar_color, theme_accent, theme_mode, bio, last_seen, created_at)
     VALUES (?, ?, ?, ?, ?, '#00a884', 'dark', '', ?, ?)`)
-    .run(id, username, password_hash, display_name.trim(), now(), now());
+    .run(id, username, password_hash, display_name.trim(), avatar_color, now(), now());
 
   const user = safeUser(db.prepare('SELECT * FROM users WHERE id = ?').get(id));
   const token = jwt.sign({ id, username }, JWT_SECRET, { expiresIn: '30d' });
