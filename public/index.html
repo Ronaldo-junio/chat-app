@@ -2,157 +2,238 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChatApp</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#00a884" id="theme-color-meta">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <title>Chat App</title>
+  <link rel="stylesheet" href="/css/app.css">
 </head>
-<body>
+<body class="theme-dark">
 
-<!-- Tela de login -->
-<div id="login-screen" class="login-screen">
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="login-icon">💬</div>
-      <h1>ChatApp</h1>
-      <p>Conecte-se com o mundo</p>
+<!-- AUTH SCREEN -->
+<div id="screen-auth" class="screen active">
+  <div class="auth-container">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">💬</div>
+      <h1 class="auth-title">Chat App</h1>
+      <p class="auth-subtitle">Mensagens em tempo real</p>
     </div>
-    <form id="login-form">
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Entrar</button>
+      <button class="auth-tab" data-tab="register">Criar conta</button>
+    </div>
+    <form id="form-login" class="auth-form active">
       <div class="input-group">
-        <label>Seu nome</label>
-        <input type="text" id="user-name" placeholder="Digite seu nome..." maxlength="30" autocomplete="off" required>
+        <label>Usuário</label>
+        <input type="text" id="login-username" placeholder="seu_usuario" autocomplete="username" required>
       </div>
-      <button type="submit" class="btn-login">Entrar <span>→</span></button>
+      <div class="input-group">
+        <label>Senha</label>
+        <input type="password" id="login-password" placeholder="••••••" autocomplete="current-password" required>
+      </div>
+      <div class="auth-error hidden" id="login-error"></div>
+      <button type="submit" class="btn-primary btn-full">ENTRAR</button>
+    </form>
+    <form id="form-register" class="auth-form hidden">
+      <div class="input-group">
+        <label>Nome de exibição</label>
+        <input type="text" id="reg-display" placeholder="Seu Nome" maxlength="30" required>
+      </div>
+      <div class="input-group">
+        <label>Usuário</label>
+        <input type="text" id="reg-username" placeholder="usuario_unico" maxlength="20" autocomplete="username" required>
+      </div>
+      <div class="input-group">
+        <label>Senha</label>
+        <input type="password" id="reg-password" placeholder="mínimo 6 caracteres" autocomplete="new-password" required>
+      </div>
+      <div class="auth-error hidden" id="reg-error"></div>
+      <button type="submit" class="btn-primary btn-full">CRIAR CONTA</button>
     </form>
   </div>
 </div>
 
-<!-- App principal -->
-<div id="app" class="app hidden">
+<!-- MAIN APP SCREEN -->
+<div id="screen-main" class="screen hidden">
 
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
+  <!-- SIDEBAR -->
+  <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
-      <div class="my-avatar" id="my-avatar"></div>
-      <div class="sidebar-title">ChatApp</div>
+      <div class="sidebar-avatar" id="my-avatar" title="Perfil"></div>
+      <div class="sidebar-search">
+        <input type="text" id="search-input" placeholder="Buscar ou nova conversa">
+      </div>
       <div class="sidebar-actions">
-        <button class="icon-btn" id="btn-new-group" title="Novo grupo">👥</button>
-        <button class="icon-btn" id="btn-menu" title="Menu">⋮</button>
-      </div>
-    </div>
-
-    <!-- Status selector -->
-    <div class="status-bar">
-      <span>Status:</span>
-      <select id="status-select">
-        <option value="online">🟢 Online</option>
-        <option value="away">🟡 Ausente</option>
-        <option value="busy">🔴 Ocupado</option>
-      </select>
-    </div>
-
-    <!-- Busca -->
-    <div class="search-bar">
-      <input type="text" id="search-input" placeholder="🔍 Buscar ou começar conversa">
-    </div>
-
-    <!-- Tabs -->
-    <div class="sidebar-tabs">
-      <button class="tab active" data-tab="chats">Conversas</button>
-      <button class="tab" data-tab="users">Contatos</button>
-    </div>
-
-    <!-- Lista de conversas -->
-    <div class="tab-content active" id="tab-chats">
-      <div class="rooms-list" id="rooms-list"></div>
-    </div>
-
-    <!-- Lista de usuários -->
-    <div class="tab-content" id="tab-users">
-      <div class="users-list" id="users-list"></div>
-    </div>
-  </div>
-
-  <!-- Painel principal -->
-  <div class="main-panel" id="main-panel">
-    <!-- Tela vazia -->
-    <div class="empty-state" id="empty-state">
-      <div class="empty-icon">💬</div>
-      <h2>ChatApp Web</h2>
-      <p>Selecione uma conversa para começar a trocar mensagens</p>
-    </div>
-
-    <!-- Chat ativo -->
-    <div class="chat-panel hidden" id="chat-panel">
-      <div class="chat-header" id="chat-header">
-        <button class="icon-btn back-btn hidden" id="back-btn">←</button>
-        <div class="chat-avatar" id="chat-avatar"></div>
-        <div class="chat-info">
-          <div class="chat-name" id="chat-name"></div>
-          <div class="chat-subtitle" id="chat-subtitle"></div>
-        </div>
-        <div class="chat-actions">
-          <button class="icon-btn" id="btn-info" title="Informações">ℹ️</button>
-        </div>
-      </div>
-
-      <div class="messages-area" id="messages-area">
-        <div class="messages-list" id="messages-list"></div>
-      </div>
-
-      <!-- Typing indicator -->
-      <div class="typing-indicator hidden" id="typing-indicator">
-        <div class="typing-dots"><span></span><span></span><span></span></div>
-        <span id="typing-text"></span>
-      </div>
-
-      <!-- Reply preview -->
-      <div class="reply-preview hidden" id="reply-preview">
-        <div class="reply-content">
-          <strong id="reply-sender"></strong>
-          <span id="reply-text"></span>
-        </div>
-        <button id="cancel-reply">✕</button>
-      </div>
-
-      <div class="message-input-area">
-        <div class="emoji-btn" id="emoji-btn" title="Emoji">😊</div>
-        <div class="emoji-picker hidden" id="emoji-picker"></div>
-        <div class="message-input" id="message-input" contenteditable="true" data-placeholder="Digite uma mensagem..."></div>
-        <button class="send-btn" id="send-btn" title="Enviar">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-            <path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"/>
-          </svg>
+        <button class="icon-btn" id="btn-new-group" title="Novo grupo">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-settings" title="Configurações">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
         </button>
       </div>
     </div>
+    <div class="conversation-list" id="conversation-list">
+      <div class="list-empty">Nenhuma conversa ainda.<br>Busque um usuário para começar.</div>
+    </div>
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div id="chat-panel" class="chat-panel">
+    <!-- Empty state -->
+    <div id="chat-empty" class="chat-empty">
+      <div class="chat-empty-icon">💬</div>
+      <h2>Chat App</h2>
+      <p>Selecione uma conversa ou inicie uma nova</p>
+    </div>
+
+    <!-- Active conversation -->
+    <div id="chat-view" class="chat-view hidden">
+      <div class="chat-header" id="chat-header">
+        <button class="icon-btn back-btn hidden" id="btn-back">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </button>
+        <div class="chat-header-avatar" id="chat-avatar"></div>
+        <div class="chat-header-info">
+          <div class="chat-header-name" id="chat-name"></div>
+          <div class="chat-header-sub" id="chat-sub"></div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="icon-btn" id="btn-chat-info" title="Info">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="messages-container" id="messages-container">
+        <div class="messages-list" id="messages-list"></div>
+      </div>
+      <div class="typing-indicator hidden" id="typing-indicator">
+        <span id="typing-text"></span>
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="message-input-bar" id="message-input-bar">
+        <div class="reply-preview hidden" id="reply-preview">
+          <div class="reply-bar"></div>
+          <div class="reply-content">
+            <span class="reply-sender" id="reply-sender-name"></span>
+            <span class="reply-text" id="reply-text-preview"></span>
+          </div>
+          <button class="icon-btn" id="btn-cancel-reply">✕</button>
+        </div>
+        <div class="input-row">
+          <div class="message-input" id="message-input" contenteditable="true" data-placeholder="Digite uma mensagem"></div>
+          <button class="send-btn" id="btn-send">
+            <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW CHAT MODAL -->
+  <div class="modal hidden" id="modal-new-chat">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Nova conversa</h3>
+        <button class="icon-btn" id="btn-close-new-chat">✕</button>
+      </div>
+      <input type="text" class="modal-search" id="user-search-input" placeholder="Buscar usuário...">
+      <div class="user-search-results" id="user-search-results"></div>
+    </div>
+  </div>
+
+  <!-- NEW GROUP MODAL -->
+  <div class="modal hidden" id="modal-new-group">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Novo Grupo</h3>
+        <button class="icon-btn" id="btn-close-new-group">✕</button>
+      </div>
+      <div class="modal-step" id="group-step-1">
+        <input type="text" class="modal-search" id="group-user-search" placeholder="Adicionar participantes...">
+        <div id="group-selected-users" class="group-selected-users"></div>
+        <div class="user-search-results" id="group-search-results"></div>
+        <button class="btn-primary" id="btn-group-next" disabled>PRÓXIMO</button>
+      </div>
+      <div class="modal-step hidden" id="group-step-2">
+        <input type="text" id="group-name-input" placeholder="Nome do grupo" class="modal-search" maxlength="50" required>
+        <div class="color-picker-label">Cor do grupo</div>
+        <div class="color-picker" id="group-color-picker"></div>
+        <button class="btn-primary" id="btn-group-create">CRIAR GRUPO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS PANEL -->
+  <div class="settings-panel hidden" id="settings-panel">
+    <div class="settings-header">
+      <button class="icon-btn" id="btn-close-settings">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </button>
+      <h2>Configurações</h2>
+    </div>
+    <div class="settings-avatar-section">
+      <div class="settings-avatar" id="settings-avatar"></div>
+      <button class="avatar-color-btn" id="btn-change-avatar-color">Mudar cor</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-field">
+        <label>Nome de exibição</label>
+        <input type="text" id="settings-display-name" maxlength="30">
+      </div>
+      <div class="settings-field">
+        <label>Bio</label>
+        <input type="text" id="settings-bio" maxlength="100" placeholder="Disponível">
+      </div>
+      <div class="settings-field">
+        <label>Cor de destaque</label>
+        <div class="color-picker" id="theme-color-picker"></div>
+      </div>
+      <div class="settings-field">
+        <label>Tema</label>
+        <div class="theme-toggle">
+          <button class="theme-btn active" data-theme="dark">🌙 Escuro</button>
+          <button class="theme-btn" data-theme="light">☀️ Claro</button>
+        </div>
+      </div>
+      <button class="btn-primary" id="btn-save-settings">SALVAR</button>
+      <button class="btn-outline" id="btn-logout">SAIR</button>
+    </div>
+  </div>
+
+  <!-- CHAT INFO PANEL -->
+  <div class="info-panel hidden" id="info-panel">
+    <div class="settings-header">
+      <button class="icon-btn" id="btn-close-info">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </button>
+      <h2 id="info-panel-title">Informações</h2>
+    </div>
+    <div class="info-avatar-section">
+      <div class="info-avatar" id="info-panel-avatar"></div>
+    </div>
+    <div class="info-body" id="info-panel-body"></div>
   </div>
 </div>
 
-<!-- Modal criar grupo -->
-<div class="modal hidden" id="modal-group">
-  <div class="modal-overlay" id="modal-overlay"></div>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Novo Grupo</h3>
-      <button class="icon-btn" id="close-modal">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="text" id="group-name" placeholder="Nome do grupo" maxlength="50">
-      <p class="modal-label">Selecionar participantes:</p>
-      <div class="modal-users" id="modal-users"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" id="cancel-group">Cancelar</button>
-      <button class="btn-primary" id="create-group">Criar Grupo</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast notificações -->
-<div class="toast-container" id="toast-container"></div>
+<!-- TOAST -->
+<div id="toast-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="app.js"></script>
+<script src="/js/db.js"></script>
+<script src="/js/socket.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/chat.js"></script>
+<script src="/js/settings.js"></script>
+<script src="/js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('SW registered'))
+      .catch(console.error);
+  }
+</script>
 </body>
 </html>
