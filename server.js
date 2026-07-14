@@ -83,8 +83,15 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// ─── HELPER ───────────────────────────────────────────────────────────────────
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
 function now() { return Date.now(); }
+
+function route(fn) {
+  return (req, res, next) => {
+    try { fn(req, res, next); }
+    catch (e) { next(e); }
+  };
+}
 
 function safeUser(u) {
   if (!u) return null;
@@ -93,17 +100,14 @@ function safeUser(u) {
 }
 
 // ─── AUTH ROUTES ──────────────────────────────────────────────────────────────
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', route((req, res) => {
   const { username, password, display_name } = req.body;
-  if (!username || !password || !display_name) {
+  if (!username || !password || !display_name)
     return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
-  }
-  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username))
     return res.status(400).json({ error: 'Usuário deve ter 3-20 caracteres alfanuméricos' });
-  }
-  if (password.length < 6) {
+  if (password.length < 6)
     return res.status(400).json({ error: 'Senha deve ter no mínimo 6 caracteres' });
-  }
 
   const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
   if (existing) return res.status(409).json({ error: 'Usuário já existe' });
@@ -120,30 +124,29 @@ app.post('/api/auth/register', (req, res) => {
   const user = safeUser(db.prepare('SELECT * FROM users WHERE id = ?').get(id));
   const token = jwt.sign({ id, username }, JWT_SECRET, { expiresIn: '30d' });
   res.json({ token, user });
-});
+}));
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', route((req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Campos obrigatórios' });
 
   const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+  if (!user || !bcrypt.compareSync(password, user.password_hash))
     return res.status(401).json({ error: 'Usuário ou senha incorretos' });
-  }
 
   db.prepare('UPDATE users SET last_seen = ? WHERE id = ?').run(now(), user.id);
   const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
   res.json({ token, user: safeUser(user) });
-});
+}));
 
 // ─── USER ROUTES ──────────────────────────────────────────────────────────────
-app.get('/api/me', authMiddleware, (req, res) => {
+app.get('/api/me', authMiddleware, route((req, res) => {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
   res.json(safeUser(user));
-});
+}));
 
-app.put('/api/me', authMiddleware, (req, res) => {
+app.put('/api/me', authMiddleware, route((req, res) => {
   const { display_name, bio, avatar_color, theme_accent, theme_mode } = req.body;
   db.prepare(`UPDATE users SET
     display_name = COALESCE(?, display_name),
@@ -156,9 +159,9 @@ app.put('/api/me', authMiddleware, (req, res) => {
 
   const user = safeUser(db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id));
   res.json(user);
-});
+}));
 
-app.get('/api/users/search', authMiddleware, (req, res) => {
+app.get('/api/users/search', authMiddleware, route((req, res) => {
   const q = (req.query.q || '').trim();
   if (!q) return res.json([]);
   const like = `%${q}%`;
@@ -166,10 +169,10 @@ app.get('/api/users/search', authMiddleware, (req, res) => {
     WHERE (username LIKE ? OR display_name LIKE ?) AND id != ? LIMIT 20`)
     .all(like, like, req.user.id);
   res.json(users);
-});
+}));
 
 // ─── CONVERSATION ROUTES ──────────────────────────────────────────────────────
-app.get('/api/conversations', authMiddleware, (req, res) => {
+app.get('/api/conversations', authMiddleware, route((req, res) => {
   const userId = req.user.id;
 
   const convs = db.prepare(`
@@ -211,9 +214,9 @@ app.get('/api/conversations', authMiddleware, (req, res) => {
   });
 
   res.json(result);
-});
+}));
 
-app.post('/api/conversations/direct', authMiddleware, (req, res) => {
+app.post('/api/conversations/direct', authMiddleware, route((req, res) => {
   const { user_id } = req.body;
   if (!user_id) return res.status(400).json({ error: 'user_id obrigatório' });
 
@@ -239,9 +242,9 @@ app.post('/api/conversations/direct', authMiddleware, (req, res) => {
 
   const conv = db.prepare('SELECT * FROM conversations WHERE id = ?').get(id);
   res.json({ ...conv, other_user: targetUser, members: [], last_message: null, unread_count: 0 });
-});
+}));
 
-app.post('/api/conversations/group', authMiddleware, (req, res) => {
+app.post('/api/conversations/group', authMiddleware, route((req, res) => {
   const { name, member_ids, description, avatar_color } = req.body;
   if (!name || !member_ids || !Array.isArray(member_ids)) {
     return res.status(400).json({ error: 'name e member_ids obrigatórios' });
@@ -273,9 +276,9 @@ app.post('/api/conversations/group', authMiddleware, (req, res) => {
 
   const conv = db.prepare('SELECT * FROM conversations WHERE id = ?').get(id);
   res.json({ ...conv, members, last_message: null, unread_count: 0 });
-});
+}));
 
-app.get('/api/conversations/:id/messages', authMiddleware, (req, res) => {
+app.get('/api/conversations/:id/messages', authMiddleware, route((req, res) => {
   const { id } = req.params;
   const { before, limit = 50 } = req.query;
   const userId = req.user.id;
@@ -315,9 +318,9 @@ app.get('/api/conversations/:id/messages', authMiddleware, (req, res) => {
   }
 
   res.json(withReplies);
-});
+}));
 
-app.put('/api/conversations/:id', authMiddleware, (req, res) => {
+app.put('/api/conversations/:id', authMiddleware, route((req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
 
@@ -334,9 +337,9 @@ app.put('/api/conversations/:id', authMiddleware, (req, res) => {
   const updated = db.prepare('SELECT * FROM conversations WHERE id = ?').get(id);
   io.to(id).emit('conversation:updated', updated);
   res.json(updated);
-});
+}));
 
-app.post('/api/conversations/:id/members', authMiddleware, (req, res) => {
+app.post('/api/conversations/:id/members', authMiddleware, route((req, res) => {
   const { id } = req.params;
   const { user_id } = req.body;
   const userId = req.user.id;
@@ -354,9 +357,9 @@ app.post('/api/conversations/:id/members', authMiddleware, (req, res) => {
     .run(msgId, id, userId, `${targetUser.display_name} entrou no grupo`, 'system', now());
 
   res.json({ ok: true });
-});
+}));
 
-app.delete('/api/conversations/:id/members/:userId', authMiddleware, (req, res) => {
+app.delete('/api/conversations/:id/members/:userId', authMiddleware, route((req, res) => {
   const { id, userId: targetId } = req.params;
   const requesterId = req.user.id;
 
@@ -379,7 +382,7 @@ app.delete('/api/conversations/:id/members/:userId', authMiddleware, (req, res) 
   }
 
   res.json({ ok: true });
-});
+}));
 
 // ─── SOCKET.IO ────────────────────────────────────────────────────────────────
 const onlineUsers = new Map(); // userId -> Set of socketIds
