@@ -520,6 +520,20 @@ io.on('connection', (socket) => {
   });
 });
 
+// ─── 404 / ERROR HANDLERS ─────────────────────────────────────────────────────
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: `Rota não encontrada: ${req.method} ${req.path}` });
+  }
+  // Para rotas não-API serve o index.html (SPA fallback)
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.use((err, req, res, _next) => {
+  console.error('Erro não tratado:', err);
+  res.status(500).json({ error: 'Erro interno do servidor' });
+});
+
 // ─── START ────────────────────────────────────────────────────────────────────
 server.listen(PORT, () => {
   console.log(`Chat App rodando em http://localhost:${PORT}`);

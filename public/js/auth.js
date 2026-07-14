@@ -35,13 +35,22 @@ const Auth = (() => {
     }
   }
 
+  async function safeJson(res) {
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+      const text = await res.text();
+      throw new Error(`Resposta inesperada do servidor (${res.status}): ${text.slice(0, 120)}`);
+    }
+    return res.json();
+  }
+
   async function login(username, password) {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error || 'Erro ao entrar');
     setSession(data.token, data.user);
     return data;
@@ -53,7 +62,7 @@ const Auth = (() => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password, display_name })
     });
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error || 'Erro ao criar conta');
     setSession(data.token, data.user);
     return data;
